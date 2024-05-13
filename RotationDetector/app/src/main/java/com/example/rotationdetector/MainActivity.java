@@ -15,15 +15,22 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.file.Paths;
 public class MainActivity extends AppCompatActivity {
 
     private MotionCapture motionCapture;
+
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // Initialize MotionCapture object
         motionCapture = new MotionCapture(this);
 
@@ -40,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
                 // Start capturing motion
                 motionCapture.startCapture();
             }
+
         });
 
         stopCaptureButton.setOnClickListener(new View.OnClickListener() {
@@ -50,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
                 // Do something with the motion pattern, such as saving it
                 Log.d("Motion Pattern", motionPattern);
                 // Stop capturing motion
-                motionCapture.stopCapture();
+                String jsonStr = motionCapture.stopCapture();
+                SavaJsonFile(jsonStr);
             }
         });
 
@@ -68,12 +77,27 @@ public class MainActivity extends AppCompatActivity {
         showDistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Show the captured motion pattern
-                String distances = motionCapture.getMaxDistance();
+                String distances = motionCapture.getDistancePattern();
                 TextView distanceTextView = findViewById(R.id.maxDistView);
-                distanceTextView.setText(distances);
+                distanceTextView.setText("The captured path is: \n" + distances);
             }
         });
+    }
+
+    public void SavaJsonFile(String jsonStr){
+//        try {
+//            File root = new File("RotationDetector/app/src/main/java/com/example/rotationdetector"); // Specify the directory path
+//            File gpxfile = new File(root, "pathItem.json"); // Specify the file name
+//            FileWriter writer = new FileWriter(gpxfile);
+//            writer.append(jsonStr);
+//            writer.flush();
+//            writer.close();
+//
+//            Log.d(TAG, "SavaJsonFile: added to json file\n" + jsonStr);
+//        }
+//        catch (IOException e) {
+//            Log.e("Exception", "File write failed: " + e.toString());
+//        }
     }
 }
 

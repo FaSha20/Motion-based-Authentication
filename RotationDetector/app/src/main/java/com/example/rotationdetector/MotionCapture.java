@@ -1,12 +1,14 @@
 package com.example.rotationdetector;
 
-import android.Manifest;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.Dictionary;
 
 public class MotionCapture implements SensorEventListener {
 
@@ -17,9 +19,12 @@ public class MotionCapture implements SensorEventListener {
     private int Move;
     private StringBuilder motionPatternBuilder;
     private float startX, startY, numOfZeros;
+    private Path path;
+
+    private Dictionary<String, Integer> dict;
     static final int Y = 2;
     static final int X = 1;
-    static final int THRESHOLD = 1;
+    static final int THRESHOLD = 2;
 
 
     private float maxDistanceX, maxDistanceY;
@@ -33,13 +38,13 @@ public class MotionCapture implements SensorEventListener {
         Move = 0;
         numOfZeros = 0;
         motionPatternBuilder = new StringBuilder();
-
     }
 
     public void startCapture() {
         capturing = true;
         maxDistanceX = 0;maxDistanceY = 0;// Reset max distance
         motionPatternBuilder.setLength(0); // Clear previous motion pattern
+        path = new Path();
         motionPatternBuilder.append("\nX               Y");
         // Register the accelerometer sensor listener
         if (accelerometer != null) {
@@ -47,14 +52,20 @@ public class MotionCapture implements SensorEventListener {
         }
     }
 
-    public void stopCapture() {
+    public String stopCapture() {
         capturing = false;
         // Unregister the sensor listener to stop capturing motion
         sensorManager.unregisterListener(this);
+        Log.d(TAG, "path: \n" + path.toString());
+        return path.toString();
     }
 
     public String getMotionPattern() {
         return motionPatternBuilder.toString();
+    }
+
+    public String getDistancePattern() {
+        return path.toString();
     }
 
     public String getMaxDistance() {
@@ -91,7 +102,12 @@ public class MotionCapture implements SensorEventListener {
                     maxDistanceX = distance;
                 }
                 if(Math.abs(x) < 1) numOfZeros += 1;
-                if(numOfZeros > THRESHOLD)Move = 0;
+                if(numOfZeros > THRESHOLD){
+                    Move = 0;
+                    String direction = "left";
+                    if(startX > 0) direction = "right";
+                    path.addItem(maxDistanceX, direction, 0);
+                }
             }
             if(Move == Y){
                 float distance = calculateDistance(startY, y);
@@ -99,7 +115,13 @@ public class MotionCapture implements SensorEventListener {
                     maxDistanceY = distance;
                 }
                 if(Math.abs(y) < 1) numOfZeros += 1;
-                if(numOfZeros > THRESHOLD)Move = 0;
+                if(numOfZeros > THRESHOLD){
+                    Move = 0;
+                    String direction = "bottom";
+                    if(startY > 0) direction = "top";
+                    path.addItem(maxDistanceY, direction, 0);
+
+                }
             }
 
         }

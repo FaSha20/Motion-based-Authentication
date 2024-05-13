@@ -15,9 +15,11 @@ public class MotionCapture implements SensorEventListener {
     private static final String TAG = "MotionCapture";
     private SensorManager sensorManager;
     private Sensor accelerometer;
+    private Sensor gyroscope;
     private boolean capturing;
     private int Move;
     private StringBuilder motionPatternBuilder;
+    private float x, y, z;
     private float startX, startY, numOfZeros;
     private Path path;
 
@@ -25,14 +27,14 @@ public class MotionCapture implements SensorEventListener {
     static final int Y = 2;
     static final int X = 1;
     static final int THRESHOLD = 2;
-
-
     private float maxDistanceX, maxDistanceY;
+    private long timestamp = 0; // Timestamp of the previous sensor event
 
     public MotionCapture(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         }
         capturing = false;
         Move = 0;
@@ -49,10 +51,12 @@ public class MotionCapture implements SensorEventListener {
         // Register the accelerometer sensor listener
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(this, gyroscope, sensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
     public String stopCapture() {
+        x = y = z = 0.0F;
         capturing = false;
         // Unregister the sensor listener to stop capturing motion
         sensorManager.unregisterListener(this);
@@ -74,13 +78,26 @@ public class MotionCapture implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (capturing && event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            // Capture accelerometer data
-            float x = event.values[0];
-            float y = event.values[1];
+        if (capturing) {
+            if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+                // Capture accelerometer data
+                x = event.values[0];
+                y = event.values[1];
+            }
+            if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
+                float w = event.values[2];
+                long currentTime = System.nanoTime(); // Current timestamp
+                float dt = (currentTime - timestamp) / 1e9f; // Convert to seconds
 
+                // Integrate angular rate to get rotation angle
+                z += w * dt * 180 / Math.PI; // Convert to degrees
+
+                // Update timestamp
+                timestamp = currentTime;
+            }
             // Append the data to the motion pattern
-            motionPatternBuilder.append(String.format("\n%.2f      %.2f ", x, y));
+            motionPatternBuilder.append(String.format("\n%.2f      %.2f         %.2f", x, y,z));
+
 
             if(Move == 0){
                if(Math.abs(x) > 1){

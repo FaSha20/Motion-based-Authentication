@@ -1,5 +1,6 @@
 package com.example.rotationdetector;
 
+import android.Manifest;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,12 +13,16 @@ public class MotionCapture implements SensorEventListener {
     private static final String TAG = "MotionCapture";
     private SensorManager sensorManager;
     private Sensor accelerometer;
-    private boolean capturing, isStarted;
+    private boolean capturing;
+    private int Move;
     private StringBuilder motionPatternBuilder;
-    private float startX, startY, startZ;
+    private float startX, startY, numOfZeros;
+    static final int Y = 2;
+    static final int X = 1;
+    static final int THRESHOLD = 1;
 
 
-    private float maxDistanceX, maxDistanceY, maxDistanceZ;
+    private float maxDistanceX, maxDistanceY;
 
     public MotionCapture(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -25,16 +30,17 @@ public class MotionCapture implements SensorEventListener {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
         capturing = false;
-        isStarted = false;
+        Move = 0;
+        numOfZeros = 0;
         motionPatternBuilder = new StringBuilder();
 
     }
 
     public void startCapture() {
         capturing = true;
-        maxDistanceX = 0;maxDistanceY = 0;maxDistanceZ = 0; // Reset max distance
+        maxDistanceX = 0;maxDistanceY = 0;// Reset max distance
         motionPatternBuilder.setLength(0); // Clear previous motion pattern
-        motionPatternBuilder.append("\nX               Y            Z");
+        motionPatternBuilder.append("\nX               Y");
         // Register the accelerometer sensor listener
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -52,7 +58,7 @@ public class MotionCapture implements SensorEventListener {
     }
 
     public String getMaxDistance() {
-        return "X dest: " + maxDistanceX + "\nY dest: " + maxDistanceY + "\nZ dest: " + maxDistanceZ;
+        return "X dest: " + maxDistanceX + "\nY dest: " + maxDistanceY ;
     }
 
     @Override
@@ -61,49 +67,46 @@ public class MotionCapture implements SensorEventListener {
             // Capture accelerometer data
             float x = event.values[0];
             float y = event.values[1];
-            float z = event.values[2];
 
             // Append the data to the motion pattern
-            motionPatternBuilder.append(String.format("\n%.2f      %.2f     %.2f", x, y, z));
+            motionPatternBuilder.append(String.format("\n%.2f      %.2f ", x, y));
 
-            if(!isStarted && Math.abs(x) > 1){
-                startX = x;
-                Log.d(TAG, "onSensorChanged: "+ startX);
-                isStarted = true;
+            if(Move == 0){
+               if(Math.abs(x) > 1){
+                   startX = x;
+                   Log.d(TAG, "X started: "+ startX);
+                   Move = X;
+                   numOfZeros = 0;
+               }else if (Math.abs(y) > 1) {
+                   startY = y;
+                   Log.d(TAG, "Y started: "+ startY);
+                   Move = Y;
+                   numOfZeros = 0;
+               }
             }
-
-            if(isStarted){
+            if(Move == X){
                 // Calculate distance from the starting point
-                float distancex = calculateDistance(startX, x);
-                if (distancex > maxDistanceX) {
-
-                    Log.d(TAG, "calculateDistance: a = " + x +" / "+ " startA = "+ startX);
-                    maxDistanceX = distancex;
-                    Log.d(TAG, "onSensorChanged: maxDist = " + maxDistanceX);
-
-
+                float distance = calculateDistance(startX, x);
+                if (distance > maxDistanceX) {
+                    maxDistanceX = distance;
                 }
-//                float distancey = calculateDistance(startY, y);
-//                if (distancey > maxDistanceY) {
-//                    maxDistanceY = distancey;
-//                }
-//                float distancez = calculateDistance(startZ, z);
-//                if (distancez > maxDistanceZ) {
-//                    maxDistanceZ = distancez;
-//                }
-
+                if(Math.abs(x) < 1) numOfZeros += 1;
+                if(numOfZeros > THRESHOLD)Move = 0;
+            }
+            if(Move == Y){
+                float distance = calculateDistance(startY, y);
+                if (distance > maxDistanceY) {
+                    maxDistanceY = distance;
+                }
+                if(Math.abs(y) < 1) numOfZeros += 1;
+                if(numOfZeros > THRESHOLD)Move = 0;
             }
 
-            startY = y;
-            startZ = z;
         }
     }
 
     private float calculateDistance(float startA, float a) {
-        // Calculate Euclidean distance between two points in 3D space
-//        float dist =  (float) Math.sqrt(Math.pow(a - startA, 2));
         float dist = Math.abs(a-startA);
-        Log.d(TAG, "CalcDist: " + dist);
         return dist;
     }
 

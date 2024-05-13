@@ -6,7 +6,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-public class Accelerometer {
+import androidx.appcompat.app.AppCompatActivity;
+
+public class Accelerometer  {
 
     // create an interface with one method
     public interface Listener {
@@ -36,7 +38,7 @@ public class Accelerometer {
         // create instance of sensor
         // with type linear acceleration
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-
+//        sensorManager.registerListener((SensorEventListener) Accelerometer.this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
         // create the sensor listener
         sensorEventListener = new SensorEventListener() {
             // this method is called when the

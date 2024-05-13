@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         Button startCaptureButton = findViewById(R.id.startCaptureButton);
         Button stopCaptureButton = findViewById(R.id.stopCaptureButton);
         Button showPatternButton = findViewById(R.id.showPatternButton);
+        Button showDistButton = findViewById(R.id.showDistButton);
 
         // Set click listeners for the buttons
         startCaptureButton.setOnClickListener(new View.OnClickListener() {
@@ -61,6 +62,16 @@ public class MainActivity extends AppCompatActivity {
                 // Display the pattern, for example, in a TextView
                 TextView patternTextView = findViewById(R.id.patternTextView);
                 patternTextView.setText("Captured Motion Pattern: " + motionPattern);
+            }
+        });
+
+        showDistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show the captured motion pattern
+                String distances = motionCapture.getMaxDistance();
+                TextView distanceTextView = findViewById(R.id.maxDistView);
+                distanceTextView.setText(distances);
             }
         });
     }

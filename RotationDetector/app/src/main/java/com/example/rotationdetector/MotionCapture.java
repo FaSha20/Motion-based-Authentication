@@ -1,5 +1,7 @@
 package com.example.rotationdetector;
 
+import static java.lang.Math.abs;
+
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -20,13 +22,15 @@ public class MotionCapture implements SensorEventListener {
     private int Move;
     private StringBuilder motionPatternBuilder;
     private float x, y, z;
-    private float startX, startY, numOfZeros;
+    private float startX, startY, numOfZeros, numOfNonZeros;
     private Path path;
 
     private Dictionary<String, Integer> dict;
     static final int Y = 2;
     static final int X = 1;
-    static final int THRESHOLD = 2;
+    static final int THRESHOLD = 3;
+    static final int THRESHOLD2 = 3;
+
     private float maxDistanceX, maxDistanceY;
     private long timestamp = 0; // Timestamp of the previous sensor event
 
@@ -47,7 +51,7 @@ public class MotionCapture implements SensorEventListener {
         maxDistanceX = 0;maxDistanceY = 0;// Reset max distance
         motionPatternBuilder.setLength(0); // Clear previous motion pattern
         path = new Path();
-        motionPatternBuilder.append("\nX               Y");
+        motionPatternBuilder.append("\nX               Y                Z");
         // Register the accelerometer sensor listener
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
@@ -60,7 +64,7 @@ public class MotionCapture implements SensorEventListener {
         capturing = false;
         // Unregister the sensor listener to stop capturing motion
         sensorManager.unregisterListener(this);
-        Log.d(TAG, "path: \n" + path.toString());
+        //Log.d(TAG, "path: \n" + path.toString());
         return path.toString();
     }
 
@@ -68,12 +72,8 @@ public class MotionCapture implements SensorEventListener {
         return motionPatternBuilder.toString();
     }
 
-    public String getDistancePattern() {
-        return path.toString();
-    }
-
-    public String getMaxDistance() {
-        return "X dest: " + maxDistanceX + "\nY dest: " + maxDistanceY ;
+    public Path getDistancePattern() {
+        return path;
     }
 
     @Override
@@ -100,16 +100,18 @@ public class MotionCapture implements SensorEventListener {
 
 
             if(Move == 0){
-               if(Math.abs(x) > 1){
+               if(abs(x) > 1){
                    startX = x;
                    Log.d(TAG, "X started: "+ startX);
                    Move = X;
                    numOfZeros = 0;
-               }else if (Math.abs(y) > 1) {
+                   numOfNonZeros = 0;
+               }else if (abs(y) > 1) {
                    startY = y;
                    Log.d(TAG, "Y started: "+ startY);
                    Move = Y;
                    numOfZeros = 0;
+                   numOfNonZeros = 0;
                }
             }
             if(Move == X){
@@ -118,12 +120,16 @@ public class MotionCapture implements SensorEventListener {
                 if (distance > maxDistanceX) {
                     maxDistanceX = distance;
                 }
-                if(Math.abs(x) < 1) numOfZeros += 1;
+                if(abs(x) < 1) numOfZeros += 1;
+                else numOfNonZeros += 1;
+
                 if(numOfZeros > THRESHOLD){
                     Move = 0;
-                    String direction = "left";
-                    if(startX > 0) direction = "right";
-                    path.addItem(maxDistanceX, direction, 0);
+                    if(numOfNonZeros >= THRESHOLD2){
+                        int angle = RoundingAngle(-z);
+                        String direction = calculateHorizontalDirection(startX, angle);
+                        path.addItem(maxDistanceX, direction, angle);
+                    }
                 }
             }
             if(Move == Y){
@@ -131,13 +137,16 @@ public class MotionCapture implements SensorEventListener {
                 if (distance > maxDistanceY) {
                     maxDistanceY = distance;
                 }
-                if(Math.abs(y) < 1) numOfZeros += 1;
+                if(abs(y) < 1) numOfZeros += 1;
+                else numOfNonZeros += 1;
+
                 if(numOfZeros > THRESHOLD){
                     Move = 0;
-                    String direction = "bottom";
-                    if(startY > 0) direction = "top";
-                    path.addItem(maxDistanceY, direction, 0);
-
+                    if(numOfNonZeros >= THRESHOLD2){
+                        int angle = RoundingAngle(-z);
+                        String direction = calculateVerticalDirection(startY, angle);
+                        path.addItem(maxDistanceY, direction, angle);
+                    }
                 }
             }
 
@@ -145,9 +154,62 @@ public class MotionCapture implements SensorEventListener {
     }
 
     private float calculateDistance(float startA, float a) {
-        float dist = Math.abs(a-startA);
+        float dist = abs(a-startA);
         return dist;
     }
+    private String calculateHorizontalDirection(float startA, float angle) {
+        String direction;
+        if (abs(angle) > 100 & abs(angle) < 200){
+            direction = "left";
+            if(startA > 0) direction = "right";
+        } else if (angle > 70 & angle < 100) {
+            direction = "up";
+            if(startA > 0) direction = "bottom";
+        }
+        else if (angle > -100 & angle < -70) {
+            direction = "bottom";
+            if(startA > 0) direction = "up";
+        }else {
+            direction = "left";
+            if(startA > 0) direction = "right";
+        }
+        return direction;
+    }
+    private String calculateVerticalDirection(float startA, float angle) {
+        String direction;
+        if (abs(angle) > 100 & abs(angle) < 200 ){
+            direction = "up";
+            if(startA > 0) direction = "bottom";
+        } else if (angle > 70 & angle < 100) {
+            direction = "left";
+            if(startA > 0) direction = "right";
+        }
+        else if (angle > -100 & angle < -70) {
+            direction = "right";
+            if(startA > 0) direction = "left";
+        }else {
+            direction = "bottom";
+            if(startA > 0) direction = "up";
+        }
+        return direction;
+    }
+
+    private int RoundingAngle (float angle) {
+        int rounded = 0;
+        if(angle > -50 & angle < 50){
+            rounded = 0;
+        }else if(angle > 70 & angle < 120){
+            rounded = 90;
+        }else if(angle > 150 & angle < 210){
+            rounded = 180;
+        }else if(angle > -120 & angle < -70){
+            rounded = -90;
+        }else if(angle > -210 & angle < -150){
+            rounded = -180;
+        }
+        return rounded;
+    }
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {

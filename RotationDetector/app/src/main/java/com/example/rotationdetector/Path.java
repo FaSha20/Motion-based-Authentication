@@ -1,5 +1,7 @@
 package com.example.rotationdetector;
 
+import static java.lang.Math.abs;
+
 import android.content.Context;
 import android.os.Build;
 import android.os.Environment;
@@ -32,10 +34,30 @@ public class Path {
             this.direction = direction;
         }
     }
-    private ArrayList<PathItem> path = new ArrayList<>();
+    public ArrayList<PathItem> path = new ArrayList<>();
 
     public void addItem(float distance, String direction, int angle){
         path.add(new PathItem(distance, direction, angle));
+    }
+
+    public boolean isMath(Path pattern, int threshold){
+        ArrayList<PathItem> pis = pattern.path;
+        if(pis.size() != path.size()){
+            Log.d(TAG, "isMath: Path sizes are not match "+ pis.size() + " - " + path.size());
+            return false;
+        }
+        for (int i  =  0 ; i < pis.size(); i++) {
+            if (path.get(i).angle != pis.get(i).angle |
+                    path.get(i).direction != pis.get(i).direction){
+                Log.d(TAG, "isMath: Path directions or angles are not match  "+ pis.get(i).direction + " - " + path.get(i).direction + " or " + pis.get(i).angle + " - " + path.get(i).angle);
+                return false;
+            }
+            if( abs(path.get(i).distance - pis.get(i).distance) > threshold){
+                Log.d(TAG, "isMath: Path distances are not match  "+ pis.get(i).distance + " - " + path.get(i).distance);
+                return false;
+            }
+        }
+        return true;
     }
 
     public String getJsonFormat() {
@@ -44,12 +66,6 @@ public class Path {
             JSONObject config1 = new JSONObject();
             JSONObject path_json = new JSONObject();
 
-//            for (PathItem item : path) {
-//                config1.put("Distance", item.distance);
-//                config1.put("Direction", item.direction);
-//                config1.put("Angle", item.angle);
-//                path_json.put()
-//            }
             return path_json.toString();
         }catch (Exception e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package com.example.rotationdetector;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -64,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Stop capturing motion and get the captured pattern
                 motionPattern = motionCapture.getMotionPattern();
-                // Do something with the motion pattern, such as saving it
-                // Log.d("Motion Pattern", motionPattern);
+                initialPath = motionCapture.getDistancePattern();
                 // Stop capturing motion
                 String jsonStr = motionCapture.stopCapture();
                 SavaJsonFile(jsonStr);
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         checkPattern.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(initialPath.isMath(authPath, THRESHOLD)){
+                if(initialPath.isMatch(authPath, THRESHOLD)){
                     validTextView.setText("Welcome!\n Your authentication was successful.");
                 }else {
                     errorTextView.setText("Authentication failed.");
@@ -122,26 +123,23 @@ public class MainActivity extends AppCompatActivity {
         showDistButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                initialPath = motionCapture.getDistancePattern();
+
                 distanceTextView.setText("The captured path is: \n" + initialPath.toString());
             }
         });
     }
 
     public void SavaJsonFile(String jsonStr){
-//        try {
-//            File root = new File("RotationDetector/app/src/main/java/com/example/rotationdetector"); // Specify the directory path
-//            File gpxfile = new File(root, "pathItem.json"); // Specify the file name
-//            FileWriter writer = new FileWriter(gpxfile);
-//            writer.append(jsonStr);
-//            writer.flush();
-//            writer.close();
-//
-//            Log.d(TAG, "SavaJsonFile: added to json file\n" + jsonStr);
-//        }
-//        catch (IOException e) {
-//            Log.e("Exception", "File write failed: " + e.toString());
-//        }
+        try {
+            Log.d(TAG, "SavaJsonFile: jsonStr\n"+jsonStr);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput("path.json", Context.MODE_PRIVATE));
+            outputStreamWriter.write(jsonStr);
+            outputStreamWriter.close();
+            Log.d(TAG, "SavaJsonFile: done");
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 }
 

@@ -40,7 +40,7 @@ public class Path {
         path.add(new PathItem(distance, direction, angle));
     }
 
-    public boolean isMath(Path pattern, int threshold){
+    public boolean isMatch(Path pattern, int threshold){
         ArrayList<PathItem> pis = pattern.path;
         if(pis.size() != path.size()){
             Log.d(TAG, "isMath: Path sizes are not match "+ pis.size() + " - " + path.size());

@@ -102,3 +102,18 @@
 ![image (37)](https://github.com/FaSha20/Motion-based-Authentication/assets/114980788/d8307e75-0772-4495-aa42-028616bed288)
 <br/><br/>
 
+### تصاویر پرفتو
+<br/><br/>
+![photo_2024-05-24_21-51-03](https://github.com/FaSha20/Motion-based-Authentication/assets/114980788/da16e938-b8b5-45d5-89d9-67820aeccd65)
+<br/><br/>
+تصویر تب سنسورها را مشاهده میکنیم. gyrocal مربوط به کالیبره شدن ژیروسکوپ توسط گوشی است و POSIX timer یک کلاک نرم افزاری است که توسط سیستم عامل اندروید استفاده میشود که تسکها را هندل کند. 
+<br/><br/>
+![photo_2024-05-24_21-54-19](https://github.com/FaSha20/Motion-based-Authentication/assets/114980788/2cccd560-4e06-484f-9c7a-deafc570fffd)
+<br/><br/>
+![photo_2024-05-24_21-54-24](https://github.com/FaSha20/Motion-based-Authentication/assets/114980788/b853debd-79dc-458e-afd3-28ed32ed8f1d)
+<br/><br/>
+![photo_2024-05-24_21-54-30](https://github.com/FaSha20/Motion-based-Authentication/assets/114980788/fb2c1b0c-e260-476a-9484-7ae22aed7a22)
+<br/><br/>
+
+### پاسخ به سوالات: 
+
